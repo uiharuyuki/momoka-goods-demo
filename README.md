@@ -11,7 +11,7 @@
 
 ## Screens and interactions
 
-- Top：コレクション紹介、8件の企画アイテム。
+- Top：採用したA案のポップアップ型。大きな立ち絵枠、縁取り題字、切抜きグッズ、ステッカー型ショートカット、Pickup、コレクション紹介、8件の企画アイテム。
 - `#/items`：カテゴリ・キーワード検索・名前順ソート、0件時のリセット。
 - `#/item/acrylic-stand` など：商品詳細、仮画像・デザインの切替、拡大ダイアログ、仕様の開閉、関連商品。
 - `#/guide`：非販売デモの説明とデータの扱い。
@@ -51,6 +51,8 @@ npm audit --audit-level=high
 - `src/art.js`：独自SVGの商品形状。完成イラストではありません。
 - `src/main.js`：画面描画と操作。hash routeで直接URLとGitHub Pagesを両立。
 - `src/styles.css`：PC／スマートフォンのワイヤー形状。
+- `src/popup.js` / `src/popup.css`：A案の編集可能なHTML/CSS構成とショートカット。生成カンプを一枚貼りしていません。
+- `src/assets/momoka-pose-wire.svg`：人物の大きさ・手を振るポーズを確認する仮線画。完成したキャラクター素材ではありません。
 - `public/robots.txt`、`index.html`：検索除外の意図を表明。アクセス制限ではありません。
 
 ## Reference boundary

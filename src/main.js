@@ -1,6 +1,7 @@
 import './styles.css'
 import { products, categories, selectProducts, getProduct, parseRoute, escapeHTML as esc } from './catalog.js'
 import { art } from './art.js'
+import { popupHome } from './popup.js'
 
 const main = document.querySelector('#main')
 const zoom = document.querySelector('#image-dialog')
@@ -12,10 +13,6 @@ let overflowBeforeZoom = ''
 
 function card(product) {
   return `<article class="product-card"><a class="product-card-link" href="#/item/${product.id}" aria-label="${esc(product.name)}の詳細"><div class="card-image">${art(product)}<span class="card-open" aria-hidden="true">↗</span></div><div class="card-copy"><p class="eyebrow">${product.collection} / ${esc(product.category)}</p><h3>${esc(product.name)}</h3><p class="card-price">価格未定 <span>企画サンプル</span></p></div></a></article>`
-}
-function hero() {
-  return `<section class="hero" aria-labelledby="hero-title"><div class="hero-copy"><p class="eyebrow">COLLECTION 01 — BASIC</p><h1 id="hero-title">いつもの場所に、<br />小さなももか。</h1><p class="hero-intro">机の片隅に。お出かけのおともに。<br />ももかのグッズを想像する、小さなギャラリー。</p><a class="button primary" href="#/items">アイテムを見る <span aria-hidden="true">↗</span></a><p class="hero-note">商品・画像は、すべてワイヤー用のサンプルです。</p></div><div class="hero-stage" aria-label="アクリルスタンドとマグカップの仮ビジュアル"><span class="hero-stage-word" aria-hidden="true">MOMOKA</span><div class="hero-stand">${art(products[0], { label: false })}</div><div class="hero-mug">${art(products[2], { label: false })}</div><div class="hero-stage-label"><span>WIRE VISUAL</span><span>01 / BASIC</span></div></div></section>
-  <section class="collections section-width" aria-labelledby="collections-title"><div class="section-heading"><div><p class="eyebrow">COLLECTIONS</p><h2 id="collections-title">ふたつの楽しみ方。</h2></div><span class="section-aside">好きな場所から、選んでみて。</span></div><div class="collection-grid"><a href="#/items" data-collection="BASIC" class="collection-link"><span class="collection-index">01</span><div><span class="eyebrow">BASIC COLLECTION</span><h3>暮らしのそばに。</h3><p>飾るもの、持ち歩くもの。</p></div><span class="round-arrow" aria-hidden="true">↗</span></a><a href="#/items" data-collection="DIGITAL" class="collection-link digital"><span class="collection-index">02</span><div><span class="eyebrow">DIGITAL COLLECTION</span><h3>画面の中にも。</h3><p>壁紙と、ひとことのカード。</p></div><span class="round-arrow" aria-hidden="true">↗</span></a></div></section>`
 }
 function catalog(isHome) {
   return `<section class="catalog section-width" aria-labelledby="items-title"><div class="section-heading"><div><p class="eyebrow">ALL ITEMS</p><${isHome ? 'h2' : 'h1'} id="items-title">アイテムを探す。</${isHome ? 'h2' : 'h1'}></div><p class="result-count" role="status"></p></div><div class="catalog-tools"><div class="search-field" role="search"><label for="search">商品を検索</label><div><span aria-hidden="true">⌕</span><input id="search" type="search" placeholder="商品名やキーワード" value="${esc(filters.query)}" autocomplete="off" maxlength="120" /></div></div><div class="sort-field"><label for="sort">並び順</label><select id="sort"><option value="default" ${filters.sort === 'default' ? 'selected' : ''}>掲載順</option><option value="name" ${filters.sort === 'name' ? 'selected' : ''}>名前順</option></select></div></div><div class="category-row" role="group" aria-label="商品カテゴリ">${categories.map(category => `<button type="button" data-category="${esc(category)}" aria-pressed="${category === filters.category}">${esc(category)}</button>`).join('')}</div><div class="filter-summary"></div><div class="product-grid" id="product-grid"></div></section>`
@@ -53,7 +50,7 @@ function render(moveFocus = false) {
   selectedView = 0
   selectedVariant = 0
   const product = current.page === 'item' ? getProduct(current.id) : null
-  if (current.page === 'home') main.innerHTML = hero() + catalog(true) + aboutStrip()
+  if (current.page === 'home') main.innerHTML = popupHome() + catalog(true) + aboutStrip()
   else if (current.page === 'items') main.innerHTML = catalog(false) + aboutStrip()
   else if (product) main.innerHTML = detail(product)
   else if (current.page === 'guide') main.innerHTML = guide()
@@ -87,6 +84,14 @@ main.addEventListener('click', event => {
   if (target.hasAttribute('data-collection')) {
     Object.assign(filters, { category: 'すべて', query: '', sort: 'default', collection: target.dataset.collection })
     if (location.hash === '#/items') { event.preventDefault(); render(true) }
+  }
+  if (target.hasAttribute('data-quick-query')) {
+    Object.assign(filters, { category: 'すべて', query: target.dataset.quickQuery, sort: 'default', collection: '' })
+    if (location.hash === '#/items') { event.preventDefault(); render(true) }
+  }
+  if (target.hasAttribute('data-collections-scroll')) {
+    main.querySelector('#collections')?.scrollIntoView({ behavior: 'instant', block: 'start' })
+    main.querySelector('#collections-title')?.focus({ preventScroll: true })
   }
   if (target.hasAttribute('data-view')) { selectedView = Number(target.dataset.view); updateGallery() }
   if (target.hasAttribute('data-variant')) { selectedVariant = Number(target.dataset.variant); updateGallery() }

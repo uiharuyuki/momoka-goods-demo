@@ -26,9 +26,33 @@ try {
  const errors=[],unexpected=[]
  page.on('pageerror',e=>errors.push(e.message))
  page.on('request',r=>{if(!['document','script','stylesheet','image','other'].includes(r.resourceType())||new URL(r.url()).origin!==new URL(base).origin)unexpected.push({url:r.url(),type:r.resourceType()})})
- async function open(hash='#/') {await page.goto(base+hash);await page.locator('#main h1').waitFor();await page.evaluate(()=>document.fonts.ready)}
+ async function open(hash='#/') {
+  await page.goto(base+hash)
+  const product=products.find(p=>hash==='#/item/'+p.id)
+  const selector=hash==='#/'?'.popup-hero h1':hash==='#/items'?'h1#items-title':hash==='#/guide'?'.guide h1':product?'#product-title':'.not-found h1'
+  await page.locator(selector).waitFor()
+  if(product) await page.waitForFunction(name=>document.querySelector('#product-title')?.textContent===name,product.name)
+  await page.evaluate(()=>document.fonts.ready)
+ }
  await open()
  await check('home shows the demo boundary, collection and all eight items',async()=>{assert.match(await page.locator('.demo-banner').innerText(),/購入はできません/);assert.equal(await page.locator('.product-card').count(),8);assert.equal(await page.locator('.collection-link').count(),2)})
+ await check('A concept is real responsive markup with character, cutouts and sticker navigation',async()=>{
+  await page.locator('.popup-hero').waitFor({timeout:2500})
+  assert.equal(await page.locator('.popup-character img').count(),1)
+  assert.equal(await page.locator('.floating-item').count(),3)
+  assert.equal(await page.locator('.sticker-navigation a').count(),3)
+  assert.equal(await page.locator('.pickup-card').count(),3)
+  const src=await page.locator('.popup-character img').getAttribute('src');assert.match(src,/\.svg$/)
+  const box=await page.locator('.popup-character').boundingBox();assert.ok(box.width>=480 && box.height>=400,JSON.stringify(box))
+  assert.equal(await page.locator('.popup-cta').evaluate(el=>{const r=el.getBoundingClientRect();return document.elementFromPoint(r.x+r.width/2,r.y+r.height/2)?.closest('a')===el}),true,'cutout merchandise must not cover the main CTA')
+ })
+ await check('A sticker shortcuts filter the catalog and collection shortcut scrolls',async()=>{
+  await page.locator('[data-quick-query="マグカップ"]').click();await page.waitForURL('**/#/items');await page.waitForFunction(()=>document.querySelector('h1#items-title')&&document.querySelector('#search')?.value==='マグカップ')
+  assert.equal(await page.locator('#search').inputValue(),'マグカップ');assert.equal(await page.locator('.product-card').count(),1)
+  await open();await page.locator('[data-collections-scroll]').click()
+  assert.equal(await page.locator('#collections-title').evaluate(el=>document.activeElement===el),true)
+  await page.locator('#search').fill('')
+ })
  await check('categories, search, zero results and reset work together',async()=>{
   await page.getByRole('button',{name:'飾る',exact:true}).click();assert.equal(await page.locator('.product-card').count(),3)
   await page.getByRole('button',{name:'すべて',exact:true}).click()
@@ -57,6 +81,7 @@ try {
    await check(`${hash} at ${width}: layout and non-selling boundary`,async()=>{
     const sizes=await page.evaluate(()=>({scroll:document.documentElement.scrollWidth,client:document.documentElement.clientWidth}))
     assert.ok(sizes.scroll<=sizes.client,JSON.stringify(sizes));assert.equal(await page.locator('.demo-banner').isVisible(),true)
+    if(hash==='#/') assert.equal(await page.locator('.popup-cta').evaluate(el=>{const r=el.getBoundingClientRect();return document.elementFromPoint(r.x+r.width/2,r.y+r.height/2)?.closest('a')===el}),true,'main CTA must remain clickable at every viewport')
     assert.equal(await page.locator('input[type="email"],input[type="password"],form,iframe').count(),0)
     assert.ok(await page.locator('a[href="https://momoka-cloudflare-poc.nirayuki15.workers.dev/"]').count()>=2)
    })
