@@ -11,13 +11,15 @@
 
 ## Screens and interactions
 
-- Top：採用したA案のポップアップ型。大きな立ち絵枠、縁取り題字、切抜きグッズ、ステッカー型ショートカット、Pickup、コレクション紹介、8件の企画アイテム。
+- Top：A案の配置を使ったシンプルなワイヤー。左に見出しと商品枠、右に大きな人物枠。その下にショートカット、Pickup、コレクション紹介、8件の企画アイテム。
 - `#/items`：カテゴリ・キーワード検索・名前順ソート、0件時のリセット。
 - `#/item/acrylic-stand` など：商品詳細、仮画像・デザインの切替、拡大ダイアログ、仕様の開閉、関連商品。
 - `#/guide`：非販売デモの説明とデータの扱い。
 - 存在しない商品URL：一覧へ戻る案内。
 
 ブラウザの戻る操作でページ内の検索条件を維持します。再読み込みで検索・選択状態はリセットされます。実音源、カート、決済、外部API、アカウント、アクセス解析は追加していません。
+
+見た目の精度は `momoka_ai` のワイヤーとそろえます。白地・グレーの画像枠・細い枠線を使い、人物・商品は `CHARACTER PLACEHOLDER` / `PRODUCT IMAGE` として表示します。イラスト、商品線画、傾き、縁取り題字、影、装飾背景は再現しません。A案は配置と導線の参考であり、完成デザインの実装ではありません。
 
 ## Local use
 
@@ -48,11 +50,11 @@ npm audit --audit-level=high
 ## Source map
 
 - `src/catalog.js`：仮商品データ、絞り込み、ルート解析、HTMLエスケープ。
-- `src/art.js`：独自SVGの商品形状。完成イラストではありません。
+- `src/art.js`：商品画像の仮枠。画像／デザイン選択に応じてラベルを更新します。
 - `src/main.js`：画面描画と操作。hash routeで直接URLとGitHub Pagesを両立。
 - `src/styles.css`：PC／スマートフォンのワイヤー形状。
-- `src/popup.js` / `src/popup.css`：A案の編集可能なHTML/CSS構成とショートカット。生成カンプを一枚貼りしていません。
-- `src/assets/momoka-pose-wire.svg`：人物の大きさ・手を振るポーズを確認する仮線画。完成したキャラクター素材ではありません。
+- `src/popup.js` / `src/popup.css`：A案の配置だけを残したHTML/CSS構成とショートカット。画像カンプの貼り付けではありません。
+- `src/assets/momoka-pose-wire.svg`：過去の試作素材。現在は未使用で、公開ビルドには含めません。
 - `public/robots.txt`、`index.html`：検索除外の意図を表明。アクセス制限ではありません。
 
 ## Reference boundary
