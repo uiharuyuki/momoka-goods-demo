@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { chromium } from 'playwright'
 import { spawn } from 'node:child_process'
+import { stripVTControlCharacters } from 'node:util'
 import { mkdtemp, mkdir, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -14,8 +15,10 @@ let browser, server
 async function check(name,fn){await fn();checks.push({name,status:'passed'});await writeFile(join(output,'results.json'),JSON.stringify(checks,null,2));console.log('PASS '+name)}
 try {
  if(!process.env.UI_BASE_URL){
-  server=spawn(process.execPath,['node_modules/vite/bin/vite.js','preview','--host','127.0.0.1','--port','4180','--strictPort'],{stdio:'pipe'})
-  await new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(Error('preview not ready')),15000);server.once('error',reject);server.once('exit',code=>{clearTimeout(timer);reject(Error('preview exited '+code))});server.stdout.on('data',data=>{if(data.toString().includes('Local:')){clearTimeout(timer);resolve()}})})
+  // Force color here too, so CI's ANSI-wrapped startup text is covered locally.
+  server=spawn(process.execPath,['node_modules/vite/bin/vite.js','preview','--host','127.0.0.1','--port','4180','--strictPort'],{stdio:'pipe',env:{...process.env,FORCE_COLOR:'3'}})
+  await new Promise((resolve,reject)=>{let startupLog='';const timer=setTimeout(()=>reject(Error('preview not ready')),15000);server.once('error',reject);server.once('exit',code=>{clearTimeout(timer);reject(Error('preview exited '+code))});server.stdout.on('data',data=>{startupLog+=data.toString();if(stripVTControlCharacters(startupLog).includes('Local:')){clearTimeout(timer);resolve()}})})
+  assert.equal((await fetch(base)).status,200,'preview must serve the real entry point')
  }
  browser=await chromium.launch({headless:true,...(process.env.CHROMIUM_EXECUTABLE?{executablePath:process.env.CHROMIUM_EXECUTABLE}:{}),args:['--no-sandbox']})
  const context=await browser.newContext({viewport:{width:1440,height:1000},reducedMotion:'reduce'})
